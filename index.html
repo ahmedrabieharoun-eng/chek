@@ -373,6 +373,23 @@ button,input,select,textarea,span,div,p,h1,h2,h3,a{font-family:'Fredoka',cursive
 .orbit-item.owned img{filter:drop-shadow(0 0 8px rgba(124,179,66,.9)) brightness(1.2);}
 .orbit-item:not(.owned) img{filter:grayscale(85%) brightness(0.38) opacity(0.5);}
 .orbit-item img{width:100%;height:100%;object-fit:contain;}
+/* ════ MACHINES PANEL (owned mining machines, shown below production card) ════ */
+.prod-machines-panel{width:96%;margin:10px auto 0;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:12px 12px 13px;backdrop-filter:blur(8px);}
+.pm-title{font-size:12px;font-weight:800;color:#c58bff;margin-bottom:10px;text-align:center;letter-spacing:.3px;text-shadow:0 0 8px rgba(168,85,247,.35);text-transform:uppercase;}
+.pm-row-top{display:flex;justify-content:center;gap:10px;margin-bottom:10px;}
+.pm-row-top .pm-item{width:23%;max-width:74px;aspect-ratio:1/1;}
+.pm-row-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.pm-row-grid .pm-item{aspect-ratio:1/1;}
+.pm-item{
+  position:relative;background:rgba(0,0,0,.42);border:1.5px solid rgba(124,179,66,.4);
+  border-radius:14px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 10px rgba(124,179,66,.22),inset 0 0 6px rgba(124,179,66,.1);
+  cursor:pointer;transition:transform .15s;padding:8%;
+}
+.pm-item:active{transform:scale(.9)}
+.pm-item img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 6px rgba(124,179,66,.6)) brightness(1.1);}
+.pm-item .pm-qty{position:absolute;bottom:-5px;right:-5px;background:linear-gradient(135deg,var(--bamboo),#4e7a20);color:#fff;font-size:10px;font-weight:800;padding:2px 5px;border-radius:8px;border:1.5px solid rgba(0,0,0,.5);box-shadow:0 2px 5px rgba(0,0,0,.4);line-height:1;min-width:16px;text-align:center;}
+.pm-empty{display:none;text-align:center;color:var(--muted);font-size:12px;font-weight:600;padding:10px 0 2px;}
 .ptc{position:fixed;pointer-events:none;z-index:400;font-size:17px;animation:ptup .9s ease-out forwards}
 @keyframes ptup{0%{transform:translateY(0) scale(1);opacity:1}100%{transform:translateY(-74px) scale(.4);opacity:0}}
 ::-webkit-scrollbar{width:3px}
@@ -584,6 +601,14 @@ button,input,select,textarea,span,div,p,h1,h2,h3,a{font-family:'Fredoka',cursive
         <span id="tankLvDisp">1</span>
       </div>
     </div>
+  </div>
+
+  <!-- Owned machines panel: top row = 3 largest slots, rows below = 4 per row. Only owned machines are shown. -->
+  <div class="prod-machines-panel" id="machinesPanel">
+    <div class="pm-title" data-i18n="myMachinesTitle">🔧 My Machines</div>
+    <div class="pm-row-top" id="pmRowTop"></div>
+    <div class="pm-row-grid" id="pmRowGrid"></div>
+    <div class="pm-empty" id="pmEmpty" data-i18n="noMachinesYet">No machines yet — visit the Market to buy your first one!</div>
   </div>
 </div>
 
@@ -1136,6 +1161,41 @@ function updateUI(){
   updateRefUI();
   renderExchHist();
   renderWdHist();
+  renderMachinesPanel();
+}
+
+/* ════ MACHINES PANEL ════
+   Top row: up to 3 owned machines (larger slots).
+   Grid below: remaining owned machines, 4 per row.
+   A machine you own 5x still shows ONE icon with a "×5" badge — never duplicated. */
+function renderMachinesPanel(){
+  const topEl=document.getElementById('pmRowTop');
+  const gridEl=document.getElementById('pmRowGrid');
+  const emptyEl=document.getElementById('pmEmpty');
+  if(!topEl||!gridEl||!emptyEl) return;
+  const machines=S.user.machines||{};
+  const owned=ITEMS.filter(it=>(machines[it.id]||0)>0);
+  if(owned.length===0){
+    topEl.innerHTML=''; gridEl.innerHTML='';
+    emptyEl.style.display='block';
+    return;
+  }
+  emptyEl.style.display='none';
+  const top3=owned.slice(0,3);
+  const rest=owned.slice(3);
+  const pmCard=(it)=>{
+    const qty=machines[it.id]||0;
+    return `<div class="pm-item" title="${esc(it.name)} ×${qty}" onclick="goToMarketItem()">
+      <img src="${esc(it.iconUrl)}" alt="${esc(it.name)}">
+      ${qty>1?`<span class="pm-qty">×${fmt(qty)}</span>`:''}
+    </div>`;
+  };
+  topEl.innerHTML=top3.map(pmCard).join('');
+  gridEl.innerHTML=rest.map(pmCard).join('');
+}
+function goToMarketItem(){
+  const mktNav=document.querySelector('.ni[data-s="sectionMarket"]');
+  if(mktNav) goNav(mktNav);
 }
 
 /* ════ TANK ════ */
@@ -2023,6 +2083,7 @@ const TRANSLATIONS = {
     labelCoins:'كوينز',labelBamboo:'بامبو',
     statAccrued:'المتراكم',statRateDay:'المعدل/يوم',statBambooDay:'بامبو/يوم',
     prodLabel:'الإنتاج',prodTitle:'إنتاج البامبو',prodUnitMin:'بامبو / دقيقة',tapTankCollect:'اضغط على الخزان للجمع',
+    myMachinesTitle:'🔧 آلاتي',noMachinesYet:'لا توجد آلات بعد — قم بزيارة المتجر لشراء أول آلة!',
     claimBtn:'جمع Bamboo',lvLabel:'مستوى ',
     tabDeposit:'💰 إيداع',tabWithdraw:'💸 سحب',tabExchange:'⚡ تحويل',
     tabReferralTxt:'إحالة',tabSocialTxt:'اجتماعي',
@@ -2080,6 +2141,7 @@ const TRANSLATIONS = {
     labelCoins:'Coins',labelBamboo:'Bamboo',
     statAccrued:'Accrued',statRateDay:'Rate/Day',statBambooDay:'Bamboo/day',
     prodLabel:'Production',prodTitle:'BAMBOO PRODUCTION',prodUnitMin:'Bamboo / min',tapTankCollect:'Tap the tank to collect',
+    myMachinesTitle:'🔧 My Machines',noMachinesYet:'No machines yet — visit the Market to buy your first one!',
     claimBtn:'Claim Bamboo',lvLabel:'Lv.',
     tabDeposit:'💰 Deposit',tabWithdraw:'💸 Withdraw',tabExchange:'⚡ Exchange',
     tabReferralTxt:'Referral',tabSocialTxt:'Social',
@@ -2137,6 +2199,7 @@ const TRANSLATIONS = {
     labelCoins:'Коины',labelBamboo:'Бамбук',
     statAccrued:'Накоплено',statRateDay:'Темп/день',statBambooDay:'Бамбук/день',
     prodLabel:'Производство',prodTitle:'ПРОИЗВОДСТВО БАМБУКА',prodUnitMin:'Бамбук / мин',tapTankCollect:'Нажмите на бак, чтобы собрать',
+    myMachinesTitle:'🔧 Мои машины',noMachinesYet:'Пока нет машин — посетите Рынок, чтобы купить первую!',
     claimBtn:'Забрать Bamboo',lvLabel:'Ур.',
     tabDeposit:'💰 Депозит',tabWithdraw:'💸 Вывод',tabExchange:'⚡ Обмен',
     tabReferralTxt:'Реферал',tabSocialTxt:'Соцсети',
@@ -2194,6 +2257,7 @@ const TRANSLATIONS = {
     labelCoins:'Monedas',labelBamboo:'Bambú',
     statAccrued:'Acumulado',statRateDay:'Tasa/Día',statBambooDay:'Bambú/día',
     prodLabel:'Producción',prodTitle:'PRODUCCIÓN DE BAMBÚ',prodUnitMin:'Bambú / min',tapTankCollect:'Toca el tanque para recolectar',
+    myMachinesTitle:'🔧 Mis máquinas',noMachinesYet:'Aún no hay máquinas — visita el Mercado para comprar la primera!',
     claimBtn:'Reclamar Bamboo',lvLabel:'Nv.',
     tabDeposit:'💰 Depósito',tabWithdraw:'💸 Retiro',tabExchange:'⚡ Cambio',
     tabReferralTxt:'Referido',tabSocialTxt:'Social',
@@ -2251,6 +2315,7 @@ const TRANSLATIONS = {
     labelCoins:'Pièces',labelBamboo:'Bambou',
     statAccrued:'Accumulé',statRateDay:'Taux/Jour',statBambooDay:'Bambou/jour',
     prodLabel:'Production',prodTitle:'PRODUCTION DE BAMBOU',prodUnitMin:'Bambou / min',tapTankCollect:'Touchez le réservoir pour collecter',
+    myMachinesTitle:'🔧 Mes machines',noMachinesYet:"Pas encore de machines — visitez le Marché pour acheter la première !",
     claimBtn:'Réclamer Bamboo',lvLabel:'Nv.',
     tabDeposit:'💰 Dépôt',tabWithdraw:'💸 Retrait',tabExchange:'⚡ Échange',
     tabReferralTxt:'Parrainage',tabSocialTxt:'Réseaux',
