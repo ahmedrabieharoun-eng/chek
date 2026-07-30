@@ -298,8 +298,8 @@ button,input,select,textarea,span,div,p,h1,h2,h3,a{font-family:'Fredoka',cursive
 .prod-tag-val{font-size:clamp(12px,3vw,19px);font-weight:800;color:#c58bff;text-shadow:0 0 8px rgba(168,85,247,.7)}
 .prod-tag-unit{font-size:clamp(6px,1.6vw,8px);color:#c9b8ef;font-weight:700}
 .prod-title{position:absolute;left:14%;top:5.2%;width:58%;font-size:clamp(12px,3.6vw,18px);font-weight:800;color:#ece2ff;letter-spacing:.4px;display:flex;align-items:center;gap:5px;z-index:2;}
-.prod-body{position:absolute;left:5%;right:5%;top:42%;bottom:0;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:2;}
-.prod-tank-wrap{position:relative;width:74%;margin-top:auto;flex-shrink:0;}
+.prod-body{position:absolute;left:5%;right:5%;top:32%;bottom:0;display:flex;flex-direction:column;align-items:center;gap:6px;z-index:2;}
+.prod-tank-wrap{position:relative;width:92%;margin-top:auto;flex-shrink:0;}
 .prod-tank-img{width:100%;display:block;object-fit:contain;filter:drop-shadow(0 10px 18px rgba(0,0,0,.55));pointer-events:none;}
 .prod-tank-overlay{position:absolute;left:10%;right:10%;top:55%;height:24%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
 .prod-tank-val{display:flex;align-items:center;gap:5px;font-size:clamp(12px,3.6vw,18px);font-weight:800;color:#fff;text-shadow:0 2px 5px rgba(0,0,0,.9),0 0 8px rgba(0,0,0,.6);white-space:nowrap;}
@@ -1160,9 +1160,10 @@ function updateTankUI(){
   const has = S.tankProgress>=1;
   btn.disabled = !has;
   if(pctEl) pctEl.textContent = pct+'%';
-  if(txtEl) txtEl.innerHTML = has
-    ? `<img src="https://i.supaimg.com/ec27537b-aa6a-42cf-8ba1-d6850eeea36d/d7e19f8c-7876-4dc6-8542-d4f615704e46.png" style="width:18px;height:18px;object-fit:contain;vertical-align:middle;margin-right:3px"> Claim ${fmt(Math.floor(S.tankProgress))} Bamboo`
-    : `Tap the tank to collect`;
+  if(txtEl){
+    const _lg=localStorage.getItem('pandaLang')||'en';
+    txtEl.textContent = (TRANSLATIONS[_lg]&&TRANSLATIONS[_lg].tapTankCollect)||'Tap the tank to collect';
+  }
   const lvEl=document.getElementById('tankLvDisp');
   if(lvEl) lvEl.textContent=lv;
   const lvEl2=document.getElementById('prodLevelNum');
